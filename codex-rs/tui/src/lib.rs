@@ -27,6 +27,7 @@ use std::path::PathBuf;
 use tracing_appender::non_blocking;
 use tracing_subscriber::EnvFilter;
 use tracing_subscriber::prelude::*;
+use uuid::Uuid;
 
 mod app;
 mod app_event;
@@ -112,10 +113,16 @@ fn theme_configured_in_config_file(codex_home: &std::path::Path) -> bool {
 
 // (tests access modules directly within the crate)
 
+#[derive(Debug, Clone)]
+pub struct RunSummary {
+    pub token_usage: codex_core::protocol::TokenUsage,
+    pub session_id: Option<Uuid>,
+}
+
 pub async fn run_main(
     mut cli: Cli,
     codex_linux_sandbox_exe: Option<PathBuf>,
-) -> std::io::Result<codex_core::protocol::TokenUsage> {
+) -> std::io::Result<RunSummary> {
     cli.finalize_defaults();
 
     let (sandbox_mode, approval_policy) = if cli.full_auto {
@@ -307,7 +314,7 @@ fn run_ratatui_app(
     startup_footer_notice: Option<String>,
     latest_upgrade_version: Option<String>,
     theme_configured_explicitly: bool,
-) -> color_eyre::Result<codex_core::protocol::TokenUsage> {
+) -> color_eyre::Result<RunSummary> {
     color_eyre::install()?;
 
     // Forward panic reports through tracing so they appear in the UI status
@@ -366,6 +373,7 @@ fn run_ratatui_app(
 
     let app_result = app.run(&mut terminal);
     let usage = app.token_usage();
+    let session_id = app.session_id();
 
     // Optionally print timing summary to stderr after restoring the terminal.
     let timing_summary = app.perf_summary();
@@ -381,7 +389,10 @@ fn run_ratatui_app(
     }
 
     // ignore error when collecting usage – report underlying error instead
-    app_result.map(|_| usage)
+    app_result.map(|_| RunSummary {
+        token_usage: usage,
+        session_id,
+    })
 }
 
 #[expect(
