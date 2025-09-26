@@ -3160,7 +3160,8 @@ impl ChatWidget<'_> {
                 }
                 KeyCode::Up => {
                     if self.agents_terminal.focus() == AgentsTerminalFocus::Detail {
-                        layout_scroll::line_up(self);
+                        // Scroll older content into view when pressing Up while detail is focused.
+                        layout_scroll::line_down(self);
                         self.record_current_agent_scroll();
                     } else {
                         self.navigate_agents_terminal_selection(-1);
@@ -3169,7 +3170,8 @@ impl ChatWidget<'_> {
                 }
                 KeyCode::Down => {
                     if self.agents_terminal.focus() == AgentsTerminalFocus::Detail {
-                        layout_scroll::line_down(self);
+                        // Scroll toward the latest content when Down is pressed in the detail panel.
+                        layout_scroll::line_up(self);
                         self.record_current_agent_scroll();
                     } else {
                         self.navigate_agents_terminal_selection(1);
