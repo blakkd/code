@@ -108,6 +108,9 @@ pub(crate) enum AppEvent {
     /// bubbling channels through layers of widgets.
     CodexOp(codex_core::protocol::Op),
 
+    /// Track terminal focus to gate notification emission while active.
+    FocusChanged { has_focus: bool },
+
     /// Dispatch a recognized slash command from the UI (composer) to the app
     /// layer so it can be handled centrally. Includes the full command text.
     DispatchCommand(SlashCommand, String),
